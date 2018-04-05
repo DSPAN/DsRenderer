@@ -16,14 +16,22 @@ public:
         mSwapChain = std::shared_ptr<vk_swapChain>(_swapChain);
 
         //create command pool
+        createCommand();
     }
 
     std::shared_ptr<vk_device> getDevice(){return mDevice;}
+
     std::shared_ptr<vk_window> getWindow(){return mWindow;}
+
     std::shared_ptr<vk_swapChain> getSwapChain(){return mSwapChain;}
+
     VkCommandPool getCommandPool(){return mCommandPool;}
 
     VkCommandBuffer createCommand();
+
+    static VkCommandBuffer beginSingleTimeCommands(const VkCommandBufferLevel &level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+    static void endSingleTimeCommands(const VkCommandBuffer &commandBuffer);
 
 private:
     void createCommandPool();

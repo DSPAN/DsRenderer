@@ -9,14 +9,19 @@ struct Vertex {
     glm::vec3 color;
 };
 
+struct SubMesh{
+    uint32_t indexOffset;
+    uint32_t indexCount;
+};
+
 class Mesh
 {
 public:
     Mesh() {
-
     }
 
 private:
+    std::vector<SubMesh> mSubMeshs;
 
 };
 

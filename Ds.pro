@@ -29,7 +29,26 @@ HEADERS += \
     module.h \
     vkcore.h \
     vkvertexbuffer.h \
-    vkindexbuffer.h
+    vkindexbuffer.h \
+    texture2d.h \
+    stb_image.h \
+    Source/RenderAPI/util.h \
+    Source/RenderAPI/vkbuffer.h \
+    Source/RenderAPI/vkcore.h \
+    Source/RenderAPI/vkdevice.h \
+    Source/RenderAPI/vkimage.h \
+    Source/RenderAPI/vkindexbuffer.h \
+    Source/RenderAPI/vkqueuefamilyindices.h \
+    Source/RenderAPI/vkresourcemanager.h \
+    Source/RenderAPI/vkswapchain.h \
+    Source/RenderAPI/vkvertexbuffer.h \
+    Source/RenderAPI/vkwindow.h \
+    Source/Renderer/renderer.h \
+    Source/Resources/mesh.h \
+    Source/Resources/texture2d.h \
+    Source/Utility/module.h \
+    Source/Utility/stb_image.h \
+    Source/app.h
 
 SOURCES += main.cpp \
     app.cpp \
@@ -42,7 +61,23 @@ SOURCES += main.cpp \
     vk_core.cpp \
     vkbuffer.cpp \
     vkvertexbuffer.cpp \
-    vkindexbuffer.cpp
+    vkindexbuffer.cpp \
+    vkimage.cpp \
+    texture2d.cpp \
+    Examples/main.cpp \
+    Source/RenderAPI/util.cpp \
+    Source/RenderAPI/vk_core.cpp \
+    Source/RenderAPI/vkbuffer.cpp \
+    Source/RenderAPI/vkdevice.cpp \
+    Source/RenderAPI/vkimage.cpp \
+    Source/RenderAPI/vkindexbuffer.cpp \
+    Source/RenderAPI/vkresourcemanager.cpp \
+    Source/RenderAPI/vkswapchain.cpp \
+    Source/RenderAPI/vkvertexbuffer.cpp \
+    Source/RenderAPI/vkwindow.cpp \
+    Source/Renderer/renderer.cpp \
+    Source/Resources/texture2d.cpp \
+    Source/app.cpp
 
 INCLUDEPATH += "E:\DsRenderer\GLFW\glfw-3.2.1.bin.WIN32\include"
 INCLUDEPATH += "D:\vulkan\1.0.68.0\Include"
