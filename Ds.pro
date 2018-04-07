@@ -45,10 +45,10 @@ HEADERS += \
     Source/RenderAPI/vkwindow.h \
     Source/Renderer/renderer.h \
     Source/Resources/mesh.h \
-    Source/Resources/texture2d.h \
     Source/Utility/module.h \
-    Source/Utility/stb_image.h \
-    Source/app.h
+    Source/app.h \
+    Source/Importer/importer.h \
+    Source/ResourceManagers/meshmanager.h
 
 SOURCES += main.cpp \
     app.cpp \
@@ -76,15 +76,13 @@ SOURCES += main.cpp \
     Source/RenderAPI/vkvertexbuffer.cpp \
     Source/RenderAPI/vkwindow.cpp \
     Source/Renderer/renderer.cpp \
-    Source/Resources/texture2d.cpp \
-    Source/app.cpp
+    Source/app.cpp \
+    Source/Importer/importer.cpp
 
 INCLUDEPATH += "E:\DsRenderer\GLFW\glfw-3.2.1.bin.WIN32\include"
 INCLUDEPATH += "D:\vulkan\1.0.68.0\Include"
 INCLUDEPATH += "D:\glm\glm-master"
-
-
-
+INCLUDEPATH += "./External"
 
 win32: LIBS += -LD:/vulkan/1.0.68.0/Lib32/ -lvulkan-1
 INCLUDEPATH += D:/vulkan/1.0.68.0/Lib32

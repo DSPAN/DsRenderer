@@ -1,7 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
-#include "util.h"
-#include "vkswapchain.h"
+
+#include "../RenderAPI/vkswapchain.h"
 
 struct UniformBufferObject {
     glm::mat4 model;

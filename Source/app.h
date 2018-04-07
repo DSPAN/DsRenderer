@@ -1,10 +1,9 @@
 #ifndef APP_H
 #define APP_H
 
-#include "util.h"
-#include "vkwindow.h"
-#include "vkswapchain.h"
-#include "vkcore.h"
+#include "RenderAPI/vkwindow.h"
+#include "RenderAPI/vkswapchain.h"
+#include "RenderAPI/vkcore.h"
 
 class App
 {

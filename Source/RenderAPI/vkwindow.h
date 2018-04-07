@@ -18,9 +18,6 @@ public:
     bool shouldClose();
     void pollEvents();
 protected:
-
-
-
     void* mApp;
     uint32_t mWidth,mHeight;
     GLFWwindow* mWindow;

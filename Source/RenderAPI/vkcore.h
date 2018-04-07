@@ -1,7 +1,7 @@
 #ifndef VK_CORE_H
 #define VK_CORE_H
 #include "util.h"
-#include "module.h"
+#include "../Utility/module.h"
 #include "vkdevice.h"
 #include "vkwindow.h"
 #include "vkswapchain.h"
