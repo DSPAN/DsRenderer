@@ -15,8 +15,7 @@ public:
         vk_swapChain* _swapChain = new vk_swapChain(mDevice,mWindow);
         mSwapChain = std::shared_ptr<vk_swapChain>(_swapChain);
 
-        //create command pool
-        createCommand();
+        createCommandPool();
     }
 
     std::shared_ptr<vk_device> getDevice(){return mDevice;}

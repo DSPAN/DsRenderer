@@ -22,6 +22,7 @@ public:
     }
 
     VkExtent2D getSwapChainExtent(){return mSwapChainExtent;}
+
     VkFormat getSwapChainFormat(){return mSwapChainImageFormat;}
 
 private:

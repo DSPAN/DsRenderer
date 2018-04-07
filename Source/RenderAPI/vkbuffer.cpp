@@ -4,10 +4,8 @@
 vk_buffer::vk_buffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, const VkMemoryPropertyFlags &properties) :
     mSize(size),
     mBuffer(VK_NULL_HANDLE),
-    mBufferMemory(VK_NULL_HANDLE)
-{
-    if (mSize == 0)
-    {
+    mBufferMemory(VK_NULL_HANDLE) {
+    if (mSize == 0) {
         return;
     }
 
@@ -46,26 +44,22 @@ vk_buffer::vk_buffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, 
     vkBindBufferMemory(logicalDevice, m_buffer, m_bufferMemory, 0);
 }
 
-vk_buffer::~vk_buffer()
-{
+vk_buffer::~vk_buffer() {
     const auto logicalDevice = vk_core::instance().getDevice()->getDevice();
 
     vkDestroyBuffer(logicalDevice, mBuffer, nullptr);
     vkFreeMemory(logicalDevice, mBufferMemory, nullptr);
 }
 
-uint32_t vk_buffer::findMemoryType(const uint32_t &typeFilter, const VkMemoryPropertyFlags &properties)
-{
+uint32_t vk_buffer::findMemoryType(const uint32_t &typeFilter, const VkMemoryPropertyFlags &properties) {
     const auto physicalDevice = vk_core::instance().getDevice()->getPhysicalDevice();
 
     VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &physicalDeviceMemoryProperties);
 
-    for (uint32_t i = 0; i < physicalDeviceMemoryProperties.memoryTypeCount; i++)
-    {
+    for (uint32_t i = 0; i < physicalDeviceMemoryProperties.memoryTypeCount; i++) {
         if ((typeFilter & (1 << i)) &&
-            (physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-        {
+            (physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties) {
             return i;
         }
     }
@@ -74,8 +68,7 @@ uint32_t vk_buffer::findMemoryType(const uint32_t &typeFilter, const VkMemoryPro
     return 0;
 }
 
-void vk_buffer::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize &size)
-{
+void vk_buffer::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize &size) {
     const auto logicalDevice = vk_core::instance().getDevice()->getDevice();
     const auto queue = vk_core::instance().getDevice()->getGraphicsQueue();
     const auto commandPool = vk_core::instance().getCommandPool();

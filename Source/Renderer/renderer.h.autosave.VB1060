@@ -32,7 +32,7 @@ private:
     void createGraphicsPipeline();
     void createUniformBuffer();
     void createCommandBuffers();
-    void createSemaphores();
+    void createSemaphores()
 
     std::vector<VkCommandBuffer> mCommandBuffers;
     VkRenderPass mRenderPass;

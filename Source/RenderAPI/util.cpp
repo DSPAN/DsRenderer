@@ -1,7 +1,6 @@
 #include "util.h"
 #include <fstream>
 
-
 bool checkValidationLayerSupport() {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);

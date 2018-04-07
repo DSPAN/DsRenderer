@@ -1,5 +1,5 @@
 #include "app.h"
-
+#include "ResourceManagers/meshmanager.h"
 
 App::App(int w,int h)
 {
@@ -22,6 +22,7 @@ void App::init()
     mDevice = std::shared_ptr<vk_device>(_device);
 
     vk_core::startUp(mDevice,mWindow);
+    MeshManager::startUp();
 }
 
 

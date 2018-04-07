@@ -2,8 +2,8 @@
 #define APP_H
 
 #include "RenderAPI/vkwindow.h"
-#include "RenderAPI/vkswapchain.h"
 #include "RenderAPI/vkcore.h"
+#include "Renderer/renderer.h"
 
 class App
 {
@@ -23,6 +23,7 @@ private:
     VkInstance mInstance;
     std::shared_ptr<vk_device> mDevice;
     std::shared_ptr<vk_window> mWindow;
+    std::shared_ptr<Renderer> mRenderer;
 };
 
 #endif
