@@ -66,7 +66,24 @@ void vk_swapChain::createSwapChain() {
 }
 
 void vk_swapChain::createSwapChainImageViews() {
+    m_swapChainImageViews.resize(m_swapChainImages.size());
 
+    for (uint32_t i = 0; i < m_swapChainImages.size(); i++) {
+        VkImageViewCreateInfo viewInfo = {};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = m_swapChainImages[i];
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = mSwapChainImageFormat;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+
+        if(vkCreateImageView(mDevice->getDevice(), &viewInfo, nullptr, &m_swapChainImageViews[i])!= VK_SUCCESS){
+            throw std::runtime_error("failed to create image view!");
+        }
+    }
 }
 
 VkSurfaceFormatKHR vk_swapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
@@ -94,7 +111,6 @@ VkPresentModeKHR vk_swapChain::chooseSwapPresentMode(const std::vector<VkPresent
 }
 
 VkExtent2D vk_swapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
-
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
     } else {

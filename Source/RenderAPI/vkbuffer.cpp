@@ -37,11 +37,11 @@ vk_buffer::vk_buffer(const VkDeviceSize &size, const VkBufferUsageFlags &usage, 
     memoryAllocateInfo.allocationSize = memoryRequirements.size;
     memoryAllocateInfo.memoryTypeIndex = findMemoryType(memoryRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &mBufferMemory)){
+    if (vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &mBufferMemory) != VK_SUCCESS){
         throw std::runtime_error("failed to allocate buffer memory!");
     }
 
-    vkBindBufferMemory(logicalDevice, m_buffer, m_bufferMemory, 0);
+    vkBindBufferMemory(logicalDevice, mBuffer, mBufferMemory, 0);
 }
 
 vk_buffer::~vk_buffer() {

@@ -5,7 +5,7 @@
             "componentType" : 5123, 
             "count" : 2904, 
             "max" : [
-                1967
+                1965
             ], 
             "min" : [
                 0
@@ -15,7 +15,7 @@
         {
             "bufferView" : 1, 
             "componentType" : 5126, 
-            "count" : 1968, 
+            "count" : 1966, 
             "max" : [
                 1.3671875, 
                 0.984375, 
@@ -31,7 +31,7 @@
         {
             "bufferView" : 2, 
             "componentType" : 5126, 
-            "count" : 1968, 
+            "count" : 1966, 
             "max" : [
                 1.0, 
                 0.9970182180404663, 
@@ -43,38 +43,6 @@
                 -0.9864740371704102
             ], 
             "type" : "VEC3"
-        }, 
-        {
-            "bufferView" : 3, 
-            "componentType" : 5126, 
-            "count" : 1968, 
-            "max" : [
-                0.9958574175834656, 
-                0.998027503490448, 
-                0.9999710321426392, 
-                1.0
-            ], 
-            "min" : [
-                -0.9993990659713745, 
-                -0.9988468289375305, 
-                -0.9884287118911743, 
-                1.0
-            ], 
-            "type" : "VEC4"
-        }, 
-        {
-            "bufferView" : 4, 
-            "componentType" : 5126, 
-            "count" : 1968, 
-            "max" : [
-                1.0, 
-                1.0
-            ], 
-            "min" : [
-                0.0, 
-                0.0
-            ], 
-            "type" : "VEC2"
         }
     ], 
     "asset" : {
@@ -90,32 +58,20 @@
         }, 
         {
             "buffer" : 0, 
-            "byteLength" : 23616, 
+            "byteLength" : 23592, 
             "byteOffset" : 5808, 
             "target" : 34962
         }, 
         {
             "buffer" : 0, 
-            "byteLength" : 23616, 
-            "byteOffset" : 29424, 
-            "target" : 34962
-        }, 
-        {
-            "buffer" : 0, 
-            "byteLength" : 31488, 
-            "byteOffset" : 53040, 
-            "target" : 34962
-        }, 
-        {
-            "buffer" : 0, 
-            "byteLength" : 15744, 
-            "byteOffset" : 84528, 
+            "byteLength" : 23592, 
+            "byteOffset" : 29400, 
             "target" : 34962
         }
     ], 
     "buffers" : [
         {
-            "byteLength" : 100272, 
+            "byteLength" : 52992, 
             "uri" : "untitled.bin"
         }
     ], 
@@ -126,9 +82,7 @@
                 {
                     "attributes" : {
                         "NORMAL" : 2, 
-                        "POSITION" : 1, 
-                        "TANGENT" : 3, 
-                        "TEXCOORD_0" : 4
+                        "POSITION" : 1
                     }, 
                     "indices" : 0
                 }
@@ -136,6 +90,39 @@
         }
     ], 
     "nodes" : [
+        {
+            "name" : "Camera", 
+            "rotation" : [
+                0.483536034822464, 
+                0.33687159419059753, 
+                -0.20870360732078552, 
+                0.7804827094078064
+            ], 
+            "translation" : [
+                7.481131553649902, 
+                5.34366512298584, 
+                6.5076398849487305
+            ]
+        }, 
+        {
+            "name" : "Lamp", 
+            "rotation" : [
+                0.16907575726509094, 
+                0.7558802962303162, 
+                -0.27217137813568115, 
+                0.570947527885437
+            ], 
+            "scale" : [
+                1.0, 
+                1.0, 
+                0.9999999403953552
+            ], 
+            "translation" : [
+                4.076245307922363, 
+                5.903861999511719, 
+                -1.0054539442062378
+            ]
+        }, 
         {
             "mesh" : 0, 
             "name" : "Suzanne"
@@ -146,6 +133,8 @@
         {
             "name" : "Scene", 
             "nodes" : [
+                2, 
+                1, 
                 0
             ]
         }

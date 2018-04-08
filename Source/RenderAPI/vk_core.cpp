@@ -41,7 +41,7 @@ VkCommandBuffer vk_core::beginSingleTimeCommands(const VkCommandBufferLevel &lev
     allocInfo.commandBufferCount = 1;
 
     VkCommandBuffer commandBuffer;
-    if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, &commandBuffer)) {
+    if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, &commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffer!");
     }
 
@@ -49,7 +49,7 @@ VkCommandBuffer vk_core::beginSingleTimeCommands(const VkCommandBufferLevel &lev
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-    if(vkBeginCommandBuffer(commandBuffer, &beginInfo)){
+    if(vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS){
         throw std::runtime_error("failed to begin command buffer!");
     }
 
@@ -61,18 +61,20 @@ void vk_core::endSingleTimeCommands(const VkCommandBuffer &commandBuffer)
     const auto logicalDevice = mDevice->getDevice();
     const auto queue = mDevice->getGraphicsQueue();
 
-    Platform::ErrorVk(vkEndCommandBuffer(commandBuffer));
+    if(vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to end command buffer!");
+    }
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
 
-    if(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE)) {
+    if(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
         throw std::runtime_error("failed to queue submit!");
     }
 
-    if(vkQueueWaitIdle(queue)) {
+    if(vkQueueWaitIdle(queue) != VK_SUCCESS) {
         throw std::runtime_error("failed to queue wait idle!");
     }
 

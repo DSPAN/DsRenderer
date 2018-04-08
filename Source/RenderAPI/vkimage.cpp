@@ -1,5 +1,6 @@
 #include "vkimage.h"
 #include "vkcore.h"
+#include "vkbuffer.h"
 
 void createImage(const uint32_t &width, const uint32_t &height, const VkFormat &format, const VkImageType &imageType, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkImage &image, VkDeviceMemory &imageMemory)
 {
@@ -30,9 +31,9 @@ void createImage(const uint32_t &width, const uint32_t &height, const VkFormat &
     VkMemoryAllocateInfo memoryAllocateInfo = {};
     memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     memoryAllocateInfo.allocationSize = memoryRequirements.size;
-    memoryAllocateInfo.memoryTypeIndex = Buffer::FindMemoryType(memoryRequirements.memoryTypeBits, properties);;
+    memoryAllocateInfo.memoryTypeIndex =  vk_buffer::findMemoryType(memoryRequirements.memoryTypeBits,properties);;
 
-    if(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &imageMemory)) {
+    if(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &imageMemory) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate image memory!");
     }
 
@@ -100,5 +101,4 @@ void copyBufferToImage(const uint32_t &width, const uint32_t &height, const VkBu
 
     vk_core::instance().endSingleTimeCommands(commandBuffer);
 }
-
 

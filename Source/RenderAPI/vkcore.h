@@ -14,7 +14,7 @@ public:
         mWindow = window;
         vk_swapChain* _swapChain = new vk_swapChain(mDevice,mWindow);
         mSwapChain = std::shared_ptr<vk_swapChain>(_swapChain);
-
+        mSwapChain->reCreateSwapChain();
         createCommandPool();
     }
 
@@ -28,9 +28,9 @@ public:
 
     VkCommandBuffer createCommand();
 
-    static VkCommandBuffer beginSingleTimeCommands(const VkCommandBufferLevel &level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    VkCommandBuffer beginSingleTimeCommands(const VkCommandBufferLevel &level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
-    static void endSingleTimeCommands(const VkCommandBuffer &commandBuffer);
+    void endSingleTimeCommands(const VkCommandBuffer &commandBuffer);
 
 private:
     void createCommandPool();

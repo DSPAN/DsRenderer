@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "../Resources/mesh.h"
 #include "../ResourceManagers/meshmanager.h"
+#include <chrono>
 
 void Renderer::init() {
     createRenderPass();
@@ -11,6 +12,25 @@ void Renderer::init() {
     createDescriptorPool();
     createDescriptorSet();
     createCommandBuffers();
+    createSemaphores();
+}
+
+void Renderer::update() {
+    static auto startTime = std::chrono::high_resolution_clock::now();
+
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.0f;
+
+    UniformBufferObject ubo = {};
+    ubo.model = glm::rotate(glm::mat4(1.0f), time*(float)0.2, glm::vec3(0.0f, 0.0f, 1.0f));//*glm::rotate(glm::mat4(1.0f), glm::radians(-30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    ubo.view = glm::lookAt(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.proj = glm::perspective(glm::radians(45.0f), (float)vk_core::instance().getSwapChain()->getSwapChainExtent().width / (float)vk_core::instance().getSwapChain()->getSwapChainExtent().height, 0.1f, 10.0f);
+    ubo.proj[1][1] *= -1;
+
+    void* data;
+    vkMapMemory(vk_core::instance().getDevice()->getDevice(), mUniformBuffer->getBufferMemory(), 0, sizeof(ubo), 0, &data);
+    memcpy(data, &ubo, sizeof(ubo));
+    vkUnmapMemory(vk_core::instance().getDevice()->getDevice(), mUniformBuffer->getBufferMemory());
 }
 
 void Renderer::drawFrame() {
@@ -88,7 +108,7 @@ void Renderer::createUniformBuffer() {
 
 void Renderer::createRenderPass() {
     VkAttachmentDescription colorAttachment = {};
-    colorAttachment.format = mSwapChain->getSwapChainFormat();
+    colorAttachment.format = vk_core::instance().getSwapChain()->getSwapChainFormat();
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -97,14 +117,30 @@ void Renderer::createRenderPass() {
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+
+    VkAttachmentDescription depthAttachment = {};
+    depthAttachment.format =  vk_core::instance().getSwapChain()->getSwapChainFormat();
+    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
     VkAttachmentReference colorAttachmentRef = {};
     colorAttachmentRef.attachment = 0;
     colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkAttachmentReference depthAttachmentRef = {};
+    depthAttachmentRef.attachment = 1;
+    depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
+    subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
     VkSubpassDependency dependency = {};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -114,10 +150,11 @@ void Renderer::createRenderPass() {
     dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+    std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
     VkRenderPassCreateInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
+    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+    renderPassInfo.pAttachments = attachments.data();
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
     renderPassInfo.dependencyCount = 1;
@@ -215,8 +252,8 @@ void Renderer::createDescriptorSet() {
 }
 
 void Renderer::createGraphicsPipeline() {
-    VkShaderModule vertShaderModule = loadShader("shaders/vert.spv",vk_core::instance().getDevice()->getDevice());
-    VkShaderModule fragShaderModule = loadShader("shaders/frag.spv",vk_core::instance().getDevice()->getDevice());
+    VkShaderModule vertShaderModule = loadShader("E:/DsRenderer/DsRenderer/Data/Shaders/vert.spv",vk_core::instance().getDevice()->getDevice());
+    VkShaderModule fragShaderModule = loadShader("E:/DsRenderer/DsRenderer/Data/Shaders/frag.spv",vk_core::instance().getDevice()->getDevice());
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -241,7 +278,7 @@ void Renderer::createGraphicsPipeline() {
     bindingDescription.stride = sizeof(Vertex);
     bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-    std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+    std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
 
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
@@ -253,10 +290,10 @@ void Renderer::createGraphicsPipeline() {
     attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
     attributeDescriptions[1].offset = offsetof(Vertex, normal);
 
-    attributeDescriptions[1].binding = 0;
-    attributeDescriptions[1].location = 2;
-    attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-    attributeDescriptions[1].offset = offsetof(Vertex, uv);
+    attributeDescriptions[2].binding = 0;
+    attributeDescriptions[2].location = 2;
+    attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescriptions[2].offset = offsetof(Vertex, uv);
 
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -322,7 +359,7 @@ void Renderer::createGraphicsPipeline() {
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &mDescriptorSetLayout;
 
-    if (vkCreatePipelineLayout(mDevice->getDevice(), &pipelineLayoutInfo, nullptr, &mPipelineLayout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(vk_core::instance().getDevice()->getDevice(), &pipelineLayoutInfo, nullptr, &mPipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 
@@ -350,8 +387,9 @@ void Renderer::createGraphicsPipeline() {
 }
 
 void Renderer::createCommandBuffers() {
-    mCommandBuffers.resize(mSwapChainFramebuffers.size());
+    std::shared_ptr<Mesh> mesh = MeshManager::instance().getByHandle(0);
 
+    mCommandBuffers.resize(mSwapChainFramebuffers.size());
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = vk_core::instance().getCommandPool();
@@ -376,7 +414,7 @@ void Renderer::createCommandBuffers() {
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = vk_core::instance().getSwapChain()->getSwapChainExtent();
 
-        VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+        VkClearValue clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
         renderPassInfo.clearValueCount = 1;
         renderPassInfo.pClearValues = &clearColor;
 
@@ -384,17 +422,16 @@ void Renderer::createCommandBuffers() {
 
         vkCmdBindPipeline(mCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
 
-        /*
-        VkBuffer vertexBuffers[] = { vertexBuffer };
+
+        VkBuffer vertexBuffers[] = { mesh->mVertexBuffer->getBuffer() };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(mCommandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-        vkCmdBindIndexBuffer(mCommandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindIndexBuffer(mCommandBuffers[i], mesh->mIndexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdBindDescriptorSets(mCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, 0, 1, &mDescriptorSet, 0, nullptr);
 
-        vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-        */
+        vkCmdDrawIndexed(mCommandBuffers[i], static_cast<uint32_t>(mesh->indexData.size()), 1, 0, 0, 0);
 
         vkCmdEndRenderPass(mCommandBuffers[i]);
 

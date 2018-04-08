@@ -15,23 +15,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 HEADERS += \
-    vkdevice.h \
-    app.h \
-    util.h \
-    vkswapchain.h \
-    vkwindow.h \
-    vkqueuefamilyindices.h \
-    renderer.h \
-    vkbuffer.h \
-    mesh.h \
-    vkresourcemanager.h \
-    vkimage.h \
-    module.h \
-    vkcore.h \
-    vkvertexbuffer.h \
-    vkindexbuffer.h \
-    texture2d.h \
-    stb_image.h \
     Source/RenderAPI/util.h \
     Source/RenderAPI/vkbuffer.h \
     Source/RenderAPI/vkcore.h \
@@ -50,21 +33,7 @@ HEADERS += \
     Source/Importer/importer.h \
     Source/ResourceManagers/meshmanager.h
 
-SOURCES += main.cpp \
-    app.cpp \
-    util.cpp \
-    vkdevice.cpp \
-    vkswapchain.cpp \
-    vkwindow.cpp \
-    renderer.cpp \
-    vkresourcemanager.cpp \
-    vk_core.cpp \
-    vkbuffer.cpp \
-    vkvertexbuffer.cpp \
-    vkindexbuffer.cpp \
-    vkimage.cpp \
-    texture2d.cpp \
-    Examples/main.cpp \
+SOURCES += Examples/main.cpp \
     Source/RenderAPI/util.cpp \
     Source/RenderAPI/vk_core.cpp \
     Source/RenderAPI/vkbuffer.cpp \
@@ -82,7 +51,7 @@ SOURCES += main.cpp \
 INCLUDEPATH += "E:\DsRenderer\GLFW\glfw-3.2.1.bin.WIN32\include"
 INCLUDEPATH += "D:\vulkan\1.0.68.0\Include"
 INCLUDEPATH += "D:\glm\glm-master"
-INCLUDEPATH += "./External"
+INCLUDEPATH += "E:\DsRenderer\DsRenderer\External"
 
 win32: LIBS += -LD:/vulkan/1.0.68.0/Lib32/ -lvulkan-1
 INCLUDEPATH += D:/vulkan/1.0.68.0/Lib32

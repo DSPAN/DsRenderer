@@ -25,11 +25,12 @@ public:
 
     VkFormat getSwapChainFormat(){return mSwapChainImageFormat;}
 
-private:
     void reCreateSwapChain();
+private:
     void createSwapChain();
-    //todo
+
     void createSwapChainImageViews();
+
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);

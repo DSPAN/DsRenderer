@@ -13,13 +13,14 @@ struct UniformBufferObject {
 class Renderer
 {
 public:
-    Renderer(std::shared_ptr<vk_device> device) {
-        mDevice = device;
+    Renderer() {
     }
 
     ~Renderer() {}
 
     void init();
+
+    void update();
 
     void drawFrame();
 

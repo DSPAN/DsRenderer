@@ -1,4 +1,5 @@
 #include"vkvertexbuffer.h"
+#include"vkcore.h"
 
 vk_vertexBuffer::vk_vertexBuffer(const uint64_t &elementSize, const size_t &vertexCount, void *newData) :
     vk_buffer(elementSize * vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT),

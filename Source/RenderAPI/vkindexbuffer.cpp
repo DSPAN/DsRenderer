@@ -1,4 +1,5 @@
 #include "vkindexbuffer.h"
+#include "vkcore.h"
 
 vk_indexBuffer::vk_indexBuffer(const VkIndexType &indexType, const uint64_t &elementSize, const size_t &indexCount, void *newData) :
     vk_buffer(elementSize * indexCount, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT),

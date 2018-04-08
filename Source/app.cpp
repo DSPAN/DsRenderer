@@ -1,5 +1,6 @@
 #include "app.h"
 #include "ResourceManagers/meshmanager.h"
+#include "Importer/importer.h"
 
 App::App(int w,int h)
 {
@@ -23,6 +24,17 @@ void App::init()
 
     vk_core::startUp(mDevice,mWindow);
     MeshManager::startUp();
+    Importer::startUp();
+    Importer::instance().loadMeshRes("E:/DsRenderer/DsRenderer/Data/Meshs/untitled.gltf");
+    std::shared_ptr<Mesh> mesh = MeshManager::instance().getByHandle(0);
+    //std::cout<<MeshManager::instance().getNextHandle()<<std::endl;
+    std::cout<<"name : "<<mesh->mName<<std::endl;
+    std::cout<<"vectex count : "<<mesh->vertexData.size()<<std::endl;
+    std::cout<<"index count : "<<mesh->indexData.size()<<std::endl;
+
+    mesh->setBuffer();
+    mRenderer = std::shared_ptr<Renderer>(new Renderer());
+    mRenderer->init();
 }
 
 
@@ -66,15 +78,12 @@ void App::run() {
 void App::mainLoop() {
     while (!mWindow->shouldClose()) {
         mWindow->pollEvents();
-        drawFrame();
+        mRenderer->update();
+        mRenderer->drawFrame();
 
     }
 
     vkDeviceWaitIdle(mDevice->getDevice());
-}
-
-void App::drawFrame() {
-
 }
 
 
