@@ -1,15 +1,7 @@
 # DsRenderer
 vulkan-renderer
 
-TODO:
-
 gltf 2.0
 
-ecs
 
-PBR
-
-script-system
-
-Bullet Physics
-
+![Image text](https://github.com/DSPAN/DsRenderer/blob/master/Screenshots/m.png)
