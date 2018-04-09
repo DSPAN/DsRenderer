@@ -3,6 +3,7 @@
 
 #include "../RenderAPI/vkcore.h"
 #include "../RenderAPI/vkbuffer.h"
+#include "../RenderAPI/vkimage.h"
 
 struct UniformBufferObject {
     glm::mat4 model;
@@ -32,6 +33,7 @@ private:
     void createDescriptorSet();
     void createGraphicsPipeline();
     void createUniformBuffer();
+    void createDepthImage();
     void createCommandBuffers();
     void createSemaphores();
 
@@ -50,6 +52,7 @@ private:
     VkSemaphore mRenderFinishedSemaphore;
 
     std::shared_ptr<vk_buffer> mUniformBuffer;
+    std::shared_ptr<vk_image> mDepthImage;
 };
 
 #endif

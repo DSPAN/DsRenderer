@@ -2,10 +2,12 @@
 #include "vkcore.h"
 #include "vkbuffer.h"
 
-void createImage(const uint32_t &width, const uint32_t &height, const VkFormat &format, const VkImageType &imageType, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkImage &image, VkDeviceMemory &imageMemory)
+vk_image::vk_image(const uint32_t &width, const uint32_t &height, const VkFormat &format, const VkImageType &imageType, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkImageAspectFlags aspectFlags)
 {
+    mWidth = width;
+    mHeight = height;
+    mFormat = format;
     const auto logicalDevice = vk_core::instance().getDevice()->getDevice();
-
     VkImageCreateInfo imageCreateInfo = {};
     imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageCreateInfo.imageType = imageType;
@@ -21,26 +23,41 @@ void createImage(const uint32_t &width, const uint32_t &height, const VkFormat &
     imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if(vkCreateImage(logicalDevice, &imageCreateInfo, nullptr, &image)) {
+    if(vkCreateImage(logicalDevice, &imageCreateInfo, nullptr, &mImage)) {
         throw std::runtime_error("failed to create image !");
     }
 
     VkMemoryRequirements memoryRequirements;
-    vkGetImageMemoryRequirements(logicalDevice, image, &memoryRequirements);
+    vkGetImageMemoryRequirements(logicalDevice, mImage, &memoryRequirements);
 
     VkMemoryAllocateInfo memoryAllocateInfo = {};
     memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     memoryAllocateInfo.allocationSize = memoryRequirements.size;
     memoryAllocateInfo.memoryTypeIndex =  vk_buffer::findMemoryType(memoryRequirements.memoryTypeBits,properties);;
 
-    if(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+    if(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &mDeviceMemory) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate image memory!");
     }
 
-    vkBindImageMemory(logicalDevice, image, imageMemory, 0);
+    vkBindImageMemory(logicalDevice, mImage, mDeviceMemory, 0);
+
+    VkImageViewCreateInfo viewInfo = {};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = mImage;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = format;
+    viewInfo.subresourceRange.aspectMask = aspectFlags;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    if (vkCreateImageView(logicalDevice, &viewInfo, nullptr, &mImageView) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create texture image view!");
+    }
 }
 
-void setImageLayout(const VkImage &image, const VkImageLayout &oldLayout, const VkImageLayout &newLayout)
+void vk_image::setImageLayout(const VkImage &image,const VkFormat &format, const VkImageLayout &oldLayout, const VkImageLayout &newLayout)
 {
     const auto commandBuffer = vk_core::instance().beginSingleTimeCommands();
 
@@ -57,6 +74,16 @@ void setImageLayout(const VkImage &image, const VkImageLayout &oldLayout, const 
     imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
     imageMemoryBarrier.subresourceRange.layerCount = 1;
 
+    if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+        imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+        if (format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT) {
+            imageMemoryBarrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+        }
+    } else {
+        imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    }
+
     VkPipelineStageFlags sourceStage;
     VkPipelineStageFlags destinationStage;
 
@@ -67,12 +94,18 @@ void setImageLayout(const VkImage &image, const VkImageLayout &oldLayout, const 
         sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
     }else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
-        newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+              newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
         imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
         sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    }else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED &&
+              newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+        imageMemoryBarrier.srcAccessMask = 0;
+        imageMemoryBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     }else{
         throw std::invalid_argument("Unsupported texture layout transition!");
     }
@@ -82,7 +115,7 @@ void setImageLayout(const VkImage &image, const VkImageLayout &oldLayout, const 
     vk_core::instance().endSingleTimeCommands(commandBuffer);
 }
 
-void copyBufferToImage(const uint32_t &width, const uint32_t &height, const VkBuffer &buffer, const VkImage &image)
+void vk_image::copyBufferToImage(const uint32_t &width, const uint32_t &height, const VkBuffer &buffer, const VkImage &image)
 {
     const auto commandBuffer = vk_core::instance().beginSingleTimeCommands();
 

@@ -62,8 +62,8 @@ void Importer::loadMeshRes(std::string filename) {
                     vert.normal = bufferNormals ? glm::make_vec3(&bufferNormals[v * 3]) : glm::vec3(0.0f);
                     vert.uv = bufferTexCoords ? glm::make_vec2(&bufferTexCoords[v * 2]) : glm::vec3(0.0f);
                     // Vulkan coordinate system
-                    vert.pos.y *= -1.0f;
-                    vert.normal.y *= -1.0f;
+                    //vert.pos.y *= -1.0f;
+                    //vert.normal.y *= -1.0f;
                     meshPtr->vertexData.push_back(vert);
                 }
                 // Indices

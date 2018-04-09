@@ -3,22 +3,11 @@
 #include "util.h"
 #include "vkcore.h"
 
-void createImage(const uint32_t &width, const uint32_t &height, const VkFormat &format,const VkImageType &imageType, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkImage &image, VkDeviceMemory &imageMemory);
-
-void setImageLayout(const VkImage &image, const VkImageLayout &oldLayout, const VkImageLayout &newLayout);
-
-void copyBufferToImage(const uint32_t &width, const uint32_t &height, const VkBuffer &buffer, const VkImage &image);
 
 class vk_image{
   public:
-    vk_image(){
-        mWidth = 0;
-        mHeight = 0;
-        mMipLevels = 1;
-        mComponents = 0;
-        mFormat = VK_FORMAT_R8G8B8A8_UNORM;
-        mTiling = VK_IMAGE_TILING_OPTIMAL;
-    }
+    vk_image(const uint32_t &width, const uint32_t &height, const VkFormat &format, const VkImageType &imageType, const VkImageTiling &tiling, const VkImageUsageFlags &usage, const VkMemoryPropertyFlags &properties, VkImageAspectFlags aspectFlags);
+
     ~vk_image(){
         const auto logicalDevice = vk_core::instance().getDevice()->getDevice();
         vkDestroyImageView(logicalDevice, mImageView, nullptr);
@@ -27,18 +16,21 @@ class vk_image{
         vkDestroySampler(logicalDevice, mSampler, nullptr);
     }
 
-    void updateDescriptor() {
-        mDescriptor.sampler = mSampler;
-        mDescriptor.imageView = mImageView;
-        mDescriptor.imageLayout = mImageLayout;
-    }
+    VkImage getImage() const { return mImage; }
+
+    VkImageView getImageView() const { return mImageView; }
+
+    VkDeviceMemory getDeviceMemory() const { return mDeviceMemory; }
+
+    static void setImageLayout(const VkImage &image, const VkFormat &format, const VkImageLayout &oldLayout, const VkImageLayout &newLayout);
+
+    static void copyBufferToImage(const uint32_t &width, const uint32_t &height, const VkBuffer &buffer, const VkImage &image);
 
 protected:
     VkImage mImage;
     VkImageView mImageView;
     VkDeviceMemory mDeviceMemory;
     VkImageLayout mImageLayout;
-    VkDescriptorImageInfo mDescriptor;
     VkSampler mSampler;
     VkFormat mFormat;
     VkImageTiling mTiling;

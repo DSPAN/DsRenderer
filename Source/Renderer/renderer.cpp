@@ -4,6 +4,7 @@
 #include <chrono>
 
 void Renderer::init() {
+    createDepthImage();
     createRenderPass();
     createFramebuffers();
     createDescriptorSetLayout();
@@ -22,7 +23,7 @@ void Renderer::update() {
     float time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.0f;
 
     UniformBufferObject ubo = {};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time*(float)0.2, glm::vec3(0.0f, 0.0f, 1.0f));//*glm::rotate(glm::mat4(1.0f), glm::radians(-30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    ubo.model = glm::rotate(glm::mat4(1.0f), time*(float)0.2, glm::vec3(0.0f, 1.0f, 1.0f));//*glm::rotate(glm::mat4(1.0f), glm::radians(-30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     ubo.view = glm::lookAt(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.proj = glm::perspective(glm::radians(45.0f), (float)vk_core::instance().getSwapChain()->getSwapChainExtent().width / (float)vk_core::instance().getSwapChain()->getSwapChainExtent().height, 0.1f, 10.0f);
     ubo.proj[1][1] *= -1;
@@ -106,6 +107,13 @@ void Renderer::createUniformBuffer() {
     mUniformBuffer = std::shared_ptr<vk_buffer>(new vk_buffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
 }
 
+void Renderer::createDepthImage() {
+    uint32_t w = vk_core::instance().getSwapChain()->getSwapChainExtent().width;
+    uint32_t h = vk_core::instance().getSwapChain()->getSwapChainExtent().height;
+    mDepthImage = std::shared_ptr<vk_image>(new vk_image(w,h,VK_FORMAT_D32_SFLOAT,VK_IMAGE_TYPE_2D,VK_IMAGE_TILING_OPTIMAL,VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,VK_IMAGE_ASPECT_DEPTH_BIT));
+    vk_image::setImageLayout(mDepthImage->getImage(),VK_FORMAT_D32_SFLOAT,VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+}
+
 void Renderer::createRenderPass() {
     VkAttachmentDescription colorAttachment = {};
     colorAttachment.format = vk_core::instance().getSwapChain()->getSwapChainFormat();
@@ -117,9 +125,8 @@ void Renderer::createRenderPass() {
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-
     VkAttachmentDescription depthAttachment = {};
-    depthAttachment.format =  vk_core::instance().getSwapChain()->getSwapChainFormat();
+    depthAttachment.format = VK_FORMAT_D32_SFLOAT;
     depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -135,6 +142,7 @@ void Renderer::createRenderPass() {
     VkAttachmentReference depthAttachmentRef = {};
     depthAttachmentRef.attachment = 1;
     depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 
     VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -171,12 +179,12 @@ void Renderer::createFramebuffers() {
     mSwapChainFramebuffers.resize(swapChain->getImageViews().size());
 
     for (size_t i = 0; i < swapChain->getImageViews().size(); i++) {
-        VkImageView attachments[] = { swapChain->getImageViews()[i] };
+        VkImageView attachments[] = { swapChain->getImageViews()[i], mDepthImage->getImageView()};
 
         VkFramebufferCreateInfo framebufferInfo = {};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = mRenderPass;
-        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.attachmentCount = 2;
         framebufferInfo.pAttachments = attachments;
         framebufferInfo.width =  swapChain->getSwapChainExtent().width;
         framebufferInfo.height = swapChain->getSwapChainExtent().height;
@@ -354,6 +362,15 @@ void Renderer::createGraphicsPipeline() {
     colorBlending.blendConstants[2] = 0.0f;
     colorBlending.blendConstants[3] = 0.0f;
 
+
+    VkPipelineDepthStencilStateCreateInfo depthStencil = {};
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.stencilTestEnable = VK_FALSE;
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
@@ -372,6 +389,7 @@ void Renderer::createGraphicsPipeline() {
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.layout = mPipelineLayout;
     pipelineInfo.renderPass = mRenderPass;
@@ -414,9 +432,12 @@ void Renderer::createCommandBuffers() {
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = vk_core::instance().getSwapChain()->getSwapChainExtent();
 
-        VkClearValue clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
+        std::array<VkClearValue, 2> clearValues = {};
+        clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        clearValues[1].depthStencil = { 1.0f, 0 };
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
 
         vkCmdBeginRenderPass(mCommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 

@@ -24,6 +24,6 @@ void main() {
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
 	fragPosition = gl_Position.xyz;
 	mat3 normalMatrix = transpose(inverse(mat3(ubo.model)));
-    fragNormal = inNormal;
+    fragNormal = normalMatrix * inNormal;
     fragTexCoord = inTexCoord;
 }
