@@ -25,6 +25,8 @@ public:
 
     void drawFrame();
 
+    void reSize();
+
 private:
     void createRenderPass();
     void createFramebuffers();

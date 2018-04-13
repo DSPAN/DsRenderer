@@ -15,6 +15,7 @@ public:
     }
     void createSurface(VkInstance instance);
     void initWindow();
+    void setWindowSizeCallBack(GLFWwindowsizefun onWindowResized);
     bool shouldClose();
     void pollEvents();
 protected:

@@ -2,6 +2,7 @@
 #include <limits>
 
 void vk_swapChain::reCreateSwapChain() {
+    cleanUp();
     createSwapChain();
     createSwapChainImageViews();
 }
@@ -46,19 +47,13 @@ void vk_swapChain::createSwapChain() {
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
-    VkSwapchainKHR oldSwapChain = mSwapChain;
-    createInfo.oldSwapchain = oldSwapChain;
-
-    VkSwapchainKHR newSwapChain;
-    if (vkCreateSwapchainKHR(mDevice->getDevice(), &createInfo, nullptr, &newSwapChain) != VK_SUCCESS){
+    if (vkCreateSwapchainKHR(mDevice->getDevice(), &createInfo, nullptr, &mSwapChain) != VK_SUCCESS){
         throw std::runtime_error("failed to create swap chain!");
     }
 
-    mSwapChain = newSwapChain;
-
     vkGetSwapchainImagesKHR(mDevice->getDevice(), mSwapChain, &imageCount, nullptr);
-    m_swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(mDevice->getDevice(), mSwapChain, &imageCount, m_swapChainImages.data());
+    mSwapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(mDevice->getDevice(), mSwapChain, &imageCount, mSwapChainImages.data());
 
     mSwapChainImageFormat = surfaceFormat.format;
     mSwapChainExtent = extent;
@@ -66,12 +61,12 @@ void vk_swapChain::createSwapChain() {
 }
 
 void vk_swapChain::createSwapChainImageViews() {
-    m_swapChainImageViews.resize(m_swapChainImages.size());
+    mSwapChainImageViews.resize(mSwapChainImages.size());
 
-    for (uint32_t i = 0; i < m_swapChainImages.size(); i++) {
+    for (uint32_t i = 0; i < mSwapChainImages.size(); i++) {
         VkImageViewCreateInfo viewInfo = {};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = m_swapChainImages[i];
+        viewInfo.image = mSwapChainImages[i];
         viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
         viewInfo.format = mSwapChainImageFormat;
         viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -80,10 +75,19 @@ void vk_swapChain::createSwapChainImageViews() {
         viewInfo.subresourceRange.baseArrayLayer = 0;
         viewInfo.subresourceRange.layerCount = 1;
 
-        if(vkCreateImageView(mDevice->getDevice(), &viewInfo, nullptr, &m_swapChainImageViews[i])!= VK_SUCCESS){
+        if(vkCreateImageView(mDevice->getDevice(), &viewInfo, nullptr, &mSwapChainImageViews[i])!= VK_SUCCESS){
             throw std::runtime_error("failed to create image view!");
         }
     }
+}
+
+void vk_swapChain::cleanUp() {
+    /*
+    for (size_t i = 0; i < mSwapChainImageViews.size(); i++) {
+        vkDestroyImageView(mDevice->getDevice(), mSwapChainImageViews[i], nullptr);
+    }
+*/
+    vkDestroySwapchainKHR(mDevice->getDevice(), mSwapChain, nullptr);
 }
 
 VkSurfaceFormatKHR vk_swapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {

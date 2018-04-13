@@ -42,7 +42,8 @@ void Renderer::drawFrame() {
     VkResult result = vkAcquireNextImageKHR(device->getDevice(), swapChain->getSwapChain(), std::numeric_limits<uint64_t>::max(), mImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        swapChain->reCreateSwapChain();
+        reSize();
+        //swapChain->reCreateSwapChain();
         return;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
@@ -89,6 +90,17 @@ void Renderer::drawFrame() {
     }
 
     vkQueueWaitIdle(device->getPresentQueue());
+}
+
+void Renderer::reSize() {
+    vkDeviceWaitIdle(vk_core::instance().getDevice()->getDevice());
+
+    vk_core::instance().getSwapChain()->reCreateSwapChain();
+    createDepthImage();
+    createRenderPass();
+    createFramebuffers();
+    createGraphicsPipeline();
+    createCommandBuffers();
 }
 
 void Renderer::createSemaphores() {
@@ -280,6 +292,15 @@ void Renderer::createGraphicsPipeline() {
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
+    //dynamic state
+    VkDynamicState dynamicStateEnables[VK_DYNAMIC_STATE_RANGE_SIZE];
+    VkPipelineDynamicStateCreateInfo dynamicState = {};
+    memset(dynamicStateEnables, 0, sizeof dynamicStateEnables);
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.pNext = NULL;
+    dynamicState.pDynamicStates = dynamicStateEnables;
+    dynamicState.dynamicStateCount = 0;
+
     //mesh
     VkVertexInputBindingDescription bindingDescription = {};
     bindingDescription.binding = 0;
@@ -312,7 +333,7 @@ void Renderer::createGraphicsPipeline() {
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
-
+/*
     VkViewport viewport = {};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -331,6 +352,17 @@ void Renderer::createGraphicsPipeline() {
     viewportState.pViewports = &viewport;
     viewportState.scissorCount = 1;
     viewportState.pScissors = &scissor;
+    */
+    VkPipelineViewportStateCreateInfo viewportState = {};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.pNext = NULL;
+    viewportState.flags = 0;
+    viewportState.viewportCount = 1;
+    dynamicStateEnables[dynamicState.dynamicStateCount++] = VK_DYNAMIC_STATE_VIEWPORT;
+    viewportState.scissorCount = 1;
+    dynamicStateEnables[dynamicState.dynamicStateCount++] = VK_DYNAMIC_STATE_SCISSOR;
+    viewportState.pScissors = NULL;
+    viewportState.pViewports = NULL;
 
     VkPipelineRasterizationStateCreateInfo rasterizer = {};
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -386,6 +418,7 @@ void Renderer::createGraphicsPipeline() {
     pipelineInfo.pStages = shaderStages;
     pipelineInfo.pVertexInputState = &vertexInputInfo;
     pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
@@ -441,8 +474,21 @@ void Renderer::createCommandBuffers() {
 
         vkCmdBeginRenderPass(mCommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(mCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
+        VkViewport viewport = {};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float)vk_core::instance().getSwapChain()->getSwapChainExtent().width;
+        viewport.height = (float)vk_core::instance().getSwapChain()->getSwapChainExtent().height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(mCommandBuffers[i], 0, 1, &viewport);
 
+        VkRect2D scissor = {};
+        scissor.offset = { 0, 0 };
+        scissor.extent = vk_core::instance().getSwapChain()->getSwapChainExtent();
+        vkCmdSetScissor(mCommandBuffers[i], 0, 1, &scissor);
+
+        vkCmdBindPipeline(mCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
 
         VkBuffer vertexBuffers[] = { mesh->mVertexBuffer->getBuffer() };
         VkDeviceSize offsets[] = { 0 };

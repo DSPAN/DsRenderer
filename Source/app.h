@@ -17,6 +17,8 @@ private:
     void setupDebugCallback();
     void mainLoop();
     void drawFrame();
+    void reSize();
+    static void onWindowResized(GLFWwindow* window,int width, int height);
 
     int width = 0;
     int height = 0;

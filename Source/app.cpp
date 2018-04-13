@@ -2,6 +2,10 @@
 #include "ResourceManagers/meshmanager.h"
 #include "Importer/importer.h"
 
+void App::onWindowResized(GLFWwindow* window,int width, int height) {
+    if (width == 0 || height == 0) return;
+}
+
 App::App(int w,int h)
 {
     width=w;
@@ -25,6 +29,8 @@ void App::init()
     vk_core::startUp(mDevice,mWindow);
     MeshManager::startUp();
     Importer::startUp();
+    mWindow->setWindowSizeCallBack(onWindowResized);
+
     Importer::instance().loadMeshRes("E:/DsRenderer/DsRenderer/Data/Meshs/untitled.gltf");
     std::shared_ptr<Mesh> mesh = MeshManager::instance().getByHandle(0);
     //std::cout<<MeshManager::instance().getNextHandle()<<std::endl;
@@ -85,5 +91,7 @@ void App::mainLoop() {
 
     vkDeviceWaitIdle(mDevice->getDevice());
 }
+
+
 
 

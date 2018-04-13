@@ -25,6 +25,10 @@ void vk_window::createSurface(VkInstance instance) {
     }
 }
 
+void vk_window::setWindowSizeCallBack(GLFWwindowsizefun onWindowResized) {
+    glfwSetWindowSizeCallback(mWindow, onWindowResized);
+}
+
 bool vk_window::shouldClose() {
     return glfwWindowShouldClose(mWindow);
 }
