@@ -41,11 +41,7 @@ void Renderer::drawFrame() {
 
     VkResult result = vkAcquireNextImageKHR(device->getDevice(), swapChain->getSwapChain(), std::numeric_limits<uint64_t>::max(), mImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        reSize();
-        //swapChain->reCreateSwapChain();
-        return;
-    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+    if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
     }
 
@@ -83,23 +79,22 @@ void Renderer::drawFrame() {
 
     result = vkQueuePresentKHR(device->getPresentQueue(), &presentInfo);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-        swapChain->reCreateSwapChain();
-    } else if (result != VK_SUCCESS) {
+    if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");
     }
 
     vkQueueWaitIdle(device->getPresentQueue());
 }
 
-void Renderer::reSize() {
+void Renderer::resize(int w, int h) {
     vkDeviceWaitIdle(vk_core::instance().getDevice()->getDevice());
+    VkExtent2D extent;
+    extent.width = w;
+    extent.height = h;
 
-    vk_core::instance().getSwapChain()->reCreateSwapChain();
+    vk_core::instance().getSwapChain()->reCreateSwapChain(extent);
     createDepthImage();
-    createRenderPass();
     createFramebuffers();
-    createGraphicsPipeline();
     createCommandBuffers();
 }
 

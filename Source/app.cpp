@@ -1,15 +1,12 @@
 #include "app.h"
 #include "ResourceManagers/meshmanager.h"
 #include "Importer/importer.h"
-
-void App::onWindowResized(GLFWwindow* window,int width, int height) {
-    if (width == 0 || height == 0) return;
-}
+#include "./RenderAPI/vksurface.h"
 
 App::App(int w,int h)
 {
-    width=w;
-    height=h;
+    mWidth=w;
+    mHeight=h;
 }
 App::~App()
 {
@@ -17,23 +14,41 @@ App::~App()
 }
 void App::init()
 {
-    vk_window* _window = new vk_window(this,width,height);
-    mWindow = std::shared_ptr<vk_window>(_window);
-    mWindow->initWindow();
+    //init window
+    glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    mWindow = glfwCreateWindow(mWidth, mHeight, "dsRender", nullptr, nullptr);
+    glfwSetWindowUserPointer(mWindow, this);
+
+    //create instance
     createInstance();
-    mWindow->createSurface(mInstance);
 
-    vk_device* _device =new vk_device(mInstance,mWindow->getSurface());
-    mDevice = std::shared_ptr<vk_device>(_device);
+    //create surface
+    VkSurfaceKHR surface;
+    auto res = glfwCreateWindowSurface(mInstance, mWindow, nullptr, &surface);
+    if ( res != VK_SUCCESS) {
+        throw std::runtime_error("failed to create window surface!");
+    }
 
-    vk_core::startUp(mDevice,mWindow);
+    std::shared_ptr<vk_surface> surfacePtr = std::shared_ptr<vk_surface>(new vk_surface(surface));
+
+    //create device
+    std::shared_ptr<vk_device> devicePtr(new vk_device(mInstance,surfacePtr->getSurface()));
+
+    //create swapChain
+    std::shared_ptr<vk_swapChain> swapChainPtr(new vk_swapChain(devicePtr ,surfacePtr));
+    VkExtent2D extent;
+    extent.width = mWidth;
+    extent.height = mHeight;
+    swapChainPtr->reCreateSwapChain(extent);
+
+    //vk_core start
+    vk_core::startUp(devicePtr,swapChainPtr);
     MeshManager::startUp();
     Importer::startUp();
-    mWindow->setWindowSizeCallBack(onWindowResized);
 
     Importer::instance().loadMeshRes("E:/DsRenderer/DsRenderer/Data/Meshs/untitled.gltf");
     std::shared_ptr<Mesh> mesh = MeshManager::instance().getByHandle(0);
-    //std::cout<<MeshManager::instance().getNextHandle()<<std::endl;
     std::cout<<"name : "<<mesh->mName<<std::endl;
     std::cout<<"vectex count : "<<mesh->vertexData.size()<<std::endl;
     std::cout<<"index count : "<<mesh->indexData.size()<<std::endl;
@@ -41,6 +56,9 @@ void App::init()
     mesh->setBuffer();
     mRenderer = std::shared_ptr<Renderer>(new Renderer());
     mRenderer->init();
+
+    //window callback
+    glfwSetFramebufferSizeCallback(mWindow, App::resizeCallback);
 }
 
 
@@ -82,16 +100,24 @@ void App::run() {
 }
 
 void App::mainLoop() {
-    while (!mWindow->shouldClose()) {
-        mWindow->pollEvents();
+    while (!glfwWindowShouldClose(mWindow)) {
+        glfwPollEvents();
         mRenderer->update();
         mRenderer->drawFrame();
-
     }
 
-    vkDeviceWaitIdle(mDevice->getDevice());
+    vkDeviceWaitIdle(vk_core::instance().getDevice()->getDevice());
 }
 
+void App::resize(int width, int height) {
+    assert((0 <= width) && (0 <= height));
+    mRenderer->resize(width,height);
+}
+
+void App::resizeCallback(GLFWwindow *window, int width, int height) {
+    App * app = reinterpret_cast<App*>(glfwGetWindowUserPointer(window));
+    app->resize(width, height);
+}
 
 
 

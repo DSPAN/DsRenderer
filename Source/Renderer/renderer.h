@@ -25,7 +25,7 @@ public:
 
     void drawFrame();
 
-    void reSize();
+    void resize(int w,int h);
 
 private:
     void createRenderPass();

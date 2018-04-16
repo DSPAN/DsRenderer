@@ -25,13 +25,15 @@ HEADERS += \
     Source/RenderAPI/vkresourcemanager.h \
     Source/RenderAPI/vkswapchain.h \
     Source/RenderAPI/vkvertexbuffer.h \
-    Source/RenderAPI/vkwindow.h \
     Source/Renderer/renderer.h \
     Source/Resources/mesh.h \
     Source/Utility/module.h \
     Source/app.h \
     Source/Importer/importer.h \
-    Source/ResourceManagers/meshmanager.h
+    Source/ResourceManagers/meshmanager.h \
+    Source/RenderAPI/vksurface.h \
+    Source/Input/input.h \
+    Source/Input/keycode.h
 
 SOURCES += Examples/main.cpp \
     Source/RenderAPI/util.cpp \
@@ -43,7 +45,6 @@ SOURCES += Examples/main.cpp \
     Source/RenderAPI/vkresourcemanager.cpp \
     Source/RenderAPI/vkswapchain.cpp \
     Source/RenderAPI/vkvertexbuffer.cpp \
-    Source/RenderAPI/vkwindow.cpp \
     Source/Renderer/renderer.cpp \
     Source/app.cpp \
     Source/Importer/importer.cpp

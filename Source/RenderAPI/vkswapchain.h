@@ -2,14 +2,15 @@
 #define VK_SWAPCHAIN_H
 #include "vkdevice.h"
 #include "vkwindow.h"
+#include "vksurface.h"
 #include "util.h"
 
 class vk_swapChain
 {
 public:
-    vk_swapChain(std::shared_ptr<vk_device> device ,std::shared_ptr<vk_window> window) {
+    vk_swapChain(std::shared_ptr<vk_device> device ,std::shared_ptr<vk_surface> surface) {
         mDevice=device;
-        mWindow=window;
+        mSurface=surface;
     }
     ~vk_swapChain() {
 
@@ -25,21 +26,19 @@ public:
 
     VkFormat getSwapChainFormat(){return mSwapChainImageFormat;}
 
-    void reCreateSwapChain();
+    void reCreateSwapChain(const VkExtent2D& extent);
 
 private:
     void createSwapChain();
 
     void createSwapChainImageViews();
 
-    void cleanUp();
-
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+    //VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
     std::shared_ptr<vk_device> mDevice;
-    std::shared_ptr<vk_window> mWindow;
+    std::shared_ptr<vk_surface> mSurface;
     VkSwapchainKHR mSwapChain;
     std::vector<VkImage> mSwapChainImages;
     std::vector<VkImageView> mSwapChainImageViews;

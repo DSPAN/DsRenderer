@@ -1,18 +1,17 @@
 #include "vkswapchain.h"
 #include <limits>
 
-void vk_swapChain::reCreateSwapChain() {
-    cleanUp();
+void vk_swapChain::reCreateSwapChain(const VkExtent2D &extent) {
+    mSwapChainExtent = extent;
     createSwapChain();
     createSwapChainImageViews();
 }
 
 void vk_swapChain::createSwapChain() {
-    SwapChainSupportDetails swapChainSupport = querySwapChainSupport(mDevice->getPhysicalDevice(), mWindow->getSurface());
+    SwapChainSupportDetails swapChainSupport = querySwapChainSupport(mDevice->getPhysicalDevice(), mSurface->getSurface());
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-    VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount){
@@ -21,11 +20,11 @@ void vk_swapChain::createSwapChain() {
 
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = mWindow->getSurface();
+    createInfo.surface = mSurface->getSurface();
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = surfaceFormat.format;
     createInfo.imageColorSpace = surfaceFormat.colorSpace;
-    createInfo.imageExtent = extent;
+    createInfo.imageExtent = mSwapChainExtent;
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
@@ -47,16 +46,21 @@ void vk_swapChain::createSwapChain() {
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
-    if (vkCreateSwapchainKHR(mDevice->getDevice(), &createInfo, nullptr, &mSwapChain) != VK_SUCCESS){
+    VkSwapchainKHR oldSwapChain = mSwapChain;
+    createInfo.oldSwapchain = oldSwapChain;
+
+    VkSwapchainKHR newSwapChain;
+    if (vkCreateSwapchainKHR(mDevice->getDevice(), &createInfo, nullptr, &newSwapChain) != VK_SUCCESS){
         throw std::runtime_error("failed to create swap chain!");
     }
+    mSwapChain = newSwapChain;
+    vkDestroySwapchainKHR(mDevice->getDevice(), oldSwapChain, nullptr);
 
     vkGetSwapchainImagesKHR(mDevice->getDevice(), mSwapChain, &imageCount, nullptr);
     mSwapChainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(mDevice->getDevice(), mSwapChain, &imageCount, mSwapChainImages.data());
 
     mSwapChainImageFormat = surfaceFormat.format;
-    mSwapChainExtent = extent;
 
 }
 
@@ -79,15 +83,6 @@ void vk_swapChain::createSwapChainImageViews() {
             throw std::runtime_error("failed to create image view!");
         }
     }
-}
-
-void vk_swapChain::cleanUp() {
-    /*
-    for (size_t i = 0; i < mSwapChainImageViews.size(); i++) {
-        vkDestroyImageView(mDevice->getDevice(), mSwapChainImageViews[i], nullptr);
-    }
-*/
-    vkDestroySwapchainKHR(mDevice->getDevice(), mSwapChain, nullptr);
 }
 
 VkSurfaceFormatKHR vk_swapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
@@ -114,6 +109,7 @@ VkPresentModeKHR vk_swapChain::chooseSwapPresentMode(const std::vector<VkPresent
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
+/*
 VkExtent2D vk_swapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
@@ -128,3 +124,4 @@ VkExtent2D vk_swapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabi
         return actualExtent;
     }
 }
+*/
