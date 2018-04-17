@@ -63,3 +63,4 @@ DEPENDPATH += D:/vulkan/1.0.68.0/Lib32
 win32: LIBS += -L$$PWD/../GLFW/glfw-3.2.1.bin.WIN32/lib-mingw/ -lglfw3dll
 INCLUDEPATH += $$PWD/../GLFW/glfw-3.2.1.bin.WIN32/lib-mingw
 DEPENDPATH += $$PWD/../GLFW/glfw-3.2.1.bin.WIN32/lib-mingw
+

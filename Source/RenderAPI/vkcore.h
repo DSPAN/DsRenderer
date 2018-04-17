@@ -3,7 +3,6 @@
 #include "util.h"
 #include "../Utility/module.h"
 #include "vkdevice.h"
-#include "vkwindow.h"
 #include "vkswapchain.h"
 
 class vk_core :public Module<vk_core>

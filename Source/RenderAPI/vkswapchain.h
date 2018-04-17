@@ -1,7 +1,6 @@
 #ifndef VK_SWAPCHAIN_H
 #define VK_SWAPCHAIN_H
 #include "vkdevice.h"
-#include "vkwindow.h"
 #include "vksurface.h"
 #include "util.h"
 
