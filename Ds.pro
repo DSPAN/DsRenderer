@@ -33,7 +33,8 @@ HEADERS += \
     Source/ResourceManagers/meshmanager.h \
     Source/RenderAPI/vksurface.h \
     Source/Input/input.h \
-    Source/Input/keycode.h
+    Source/Input/keycode.h \
+    Source/Debugger/debugcamera.h
 
 SOURCES += Examples/main.cpp \
     Source/RenderAPI/util.cpp \

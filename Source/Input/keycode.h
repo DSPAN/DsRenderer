@@ -43,8 +43,8 @@ enum class KeyCode {
 
 enum class MouseButton {
     MouseLeft = 0,
-    MouseMiddle = 1,
-    MouseRight = 2
+    MouseRight = 1,
+    MouseMiddle = 2
 };
 
 #endif // KEY_CODE_H

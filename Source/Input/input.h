@@ -3,6 +3,7 @@
 
 #include "../Utility/module.h"
 #include "keycode.h"
+#include "glm/glm.hpp"
 #include <memory.h>
 
 class Input :public Module<Input> {
@@ -16,30 +17,39 @@ public:
         memset(mKeyUp,0,sizeof(mKeyUp));
         memset(mMouseButtonDown,0,sizeof(mMouseButtonDown));
         memset(mMouseButtonUp,0,sizeof(mMouseButtonUp));
+        mMouseScrollWheel = 0;
     }
 
-    void getKey(KeyCode key) {
+    bool getKey(KeyCode key) {
         return mKey[(int)key];
     }
 
-    void getKeyDown(KeyCode key) {
+    bool getKeyDown(KeyCode key) {
         return mKeyDown[(int)key];
     }
 
-    void getKeyUp(KeyCode key) {
+    bool getKeyUp(KeyCode key) {
         return mKeyUp[(int)key];
     }
 
-    void getMouseButton(MouseButton mouse) {
+    bool getMouseButton(MouseButton mouse) {
         return mMouseButtonHeld[(int)mouse];
     }
 
-    void getMouseButtonDown(MouseButton mouse) {
+    bool getMouseButtonDown(MouseButton mouse) {
         return mMouseButtonDown[(int)mouse];
     }
 
-    void getMouseButtonUp(MouseButton mouse) {
+    bool getMouseButtonUp(MouseButton mouse) {
         return mMouseButtonUp[(int)mouse];
+    }
+
+    glm::vec2 getMousePosition() {
+        return mMousePosition;
+    }
+
+    float getMouseScrollWheel() {
+        return mMouseScrollWheel;
     }
 
     void setMouseButton(int idx, bool state) {
@@ -87,7 +97,17 @@ public:
         mKeyUp[idx] = true;
     }
 
+    void setMousePosition(const glm::vec2& pos ) {
+        mMousePosition = pos;
+    }
+
+    void setMouseScrollWheel(float offset) {
+        mMouseScrollWheel = offset;
+    }
+
 private:
+    float mMouseScrollWheel;
+    glm::vec2 mMousePosition;
     bool mMouseButtonHeld[3];
     bool mMouseButtonDown[3];
     bool mMouseButtonUp[3];

@@ -4,6 +4,7 @@
 #include "../RenderAPI/vkcore.h"
 #include "../RenderAPI/vkbuffer.h"
 #include "../RenderAPI/vkimage.h"
+#include "../Debugger/debugcamera.h"
 
 struct UniformBufferObject {
     glm::mat4 model;
@@ -55,6 +56,8 @@ private:
 
     std::shared_ptr<vk_buffer> mUniformBuffer;
     std::shared_ptr<vk_image> mDepthImage;
+
+    std::shared_ptr<DebugCamera> mDebugCamera;
 };
 
 #endif
