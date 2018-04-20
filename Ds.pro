@@ -34,7 +34,14 @@ HEADERS += \
     Source/RenderAPI/vksurface.h \
     Source/Input/input.h \
     Source/Input/keycode.h \
-    Source/Debugger/debugcamera.h
+    Source/Debugger/debugcamera.h \
+    Source/Scene/entity.h \
+    Source/Utility/rtti.h \
+    Source/Components/component.h \
+    Source/Renderer/renderscene.h \
+    Source/Renderer/staticmodel.h \
+    Source/Components/staticmodelcomponent.h \
+    Source/Resources/texture2d.h
 
 SOURCES += Examples/main.cpp \
     Source/RenderAPI/util.cpp \
@@ -48,7 +55,8 @@ SOURCES += Examples/main.cpp \
     Source/RenderAPI/vkvertexbuffer.cpp \
     Source/Renderer/renderer.cpp \
     Source/app.cpp \
-    Source/Importer/importer.cpp
+    Source/Importer/importer.cpp \
+    Source/Utility/rtti.cpp
 
 INCLUDEPATH += "E:\DsRenderer\GLFW\glfw-3.2.1.bin.WIN32\include"
 INCLUDEPATH += "D:\vulkan\1.0.68.0\Include"

@@ -39,6 +39,7 @@ private:
     void createDepthImage();
     void createCommandBuffers();
     void createSemaphores();
+    void buildCommandBuffer();
 
     std::vector<VkCommandBuffer> mCommandBuffers;
     VkRenderPass mRenderPass;
@@ -58,6 +59,8 @@ private:
     std::shared_ptr<vk_image> mDepthImage;
 
     std::shared_ptr<DebugCamera> mDebugCamera;
+
+    uint32_t mFrameIndex;
 };
 
 #endif

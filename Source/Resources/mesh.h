@@ -32,7 +32,7 @@ public:
     }
 
     std::string mName;
-    MeshHandle mHande;
+    MeshHandle mHandle;
     std::vector<SubMesh> mSubMesh;
     std::vector<uint32_t> indexData;
     std::vector<Vertex> vertexData;

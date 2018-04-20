@@ -108,7 +108,7 @@ void Importer::loadMeshRes(std::string filename) {
                 meshPtr->mSubMesh.push_back({ indexStart, indexCount});
             }//primitives
 
-            meshPtr->mHande = MeshManager::instance().getNextHandle();
+            meshPtr->mHandle = MeshManager::instance().getNextHandle();
             MeshManager::instance().addMesh(meshPtr);
         }//if(mesh)
     }

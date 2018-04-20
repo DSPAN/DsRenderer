@@ -1,20 +1,20 @@
 #include "app.h"
+#include "Renderer/renderscene.h"
 #include "ResourceManagers/meshmanager.h"
 #include "Importer/importer.h"
 #include "Input/input.h"
 #include "./RenderAPI/vksurface.h"
+#include "Components/staticmodelcomponent.h"
+#include "Scene/entity.h"
 
-App::App(int w,int h)
-{
+App::App(int w,int h) {
     mWidth=w;
     mHeight=h;
 }
-App::~App()
-{
+App::~App() {
     vkDestroyInstance(mInstance, nullptr);
 }
-void App::init()
-{
+void App::init() {
     //init window
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -45,6 +45,7 @@ void App::init()
 
     //vk_core start
     vk_core::startUp(devicePtr,swapChainPtr);
+    RenderScene::startUp();
     MeshManager::startUp();
     Importer::startUp();
     Input::startUp();
@@ -54,8 +55,13 @@ void App::init()
     std::cout<<"name : "<<mesh->mName<<std::endl;
     std::cout<<"vectex count : "<<mesh->vertexData.size()<<std::endl;
     std::cout<<"index count : "<<mesh->indexData.size()<<std::endl;
-
     mesh->setBuffer();
+
+    std::shared_ptr<Entity> ent(new Entity());
+    std::shared_ptr<StaticModelComponent> sm(new StaticModelComponent());
+    sm->setMesh(mesh);
+    ent->addComp(sm);
+
     mRenderer = std::shared_ptr<Renderer>(new Renderer());
     mRenderer->init();
 
@@ -68,8 +74,7 @@ void App::init()
 }
 
 
-void App::createInstance()
-{
+void App::createInstance() {
     if (enableValidationLayers && !checkValidationLayerSupport()) {
         throw std::runtime_error("validation layers requested, but not available!");
     }

@@ -78,7 +78,7 @@ public:
         result = mMapResources.insert( MeshNameMap::value_type( res->mName, res ) );
 
         std::pair<MeshHandleMap::iterator, bool> resultHandle =
-            mMapResourcesByHandle.insert( MeshHandleMap::value_type( res->mHande, res ) );
+            mMapResourcesByHandle.insert( MeshHandleMap::value_type( res->mHandle, res ) );
         if (!resultHandle.second) {
             std::cout<<"Res has already exist!"<<std::endl;
         }
@@ -90,7 +90,7 @@ public:
             mMapResources.erase(nameIt);
         }
 
-        MeshHandleMap::iterator handleIt = mMapResourcesByHandle.find(res->mHande);
+        MeshHandleMap::iterator handleIt = mMapResourcesByHandle.find(res->mHandle);
         if (handleIt != mMapResourcesByHandle.end()) {
             mMapResourcesByHandle.erase(handleIt);
         }

@@ -2,6 +2,7 @@
 #include "../Resources/mesh.h"
 #include "../ResourceManagers/meshmanager.h"
 #include "../Input/input.h"
+#include "renderscene.h"
 #include <chrono>
 
 void Renderer::init() {
@@ -28,8 +29,8 @@ void Renderer::update() {
     float time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.0f;
 
     UniformBufferObject ubo = {};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time*(float)0.2, glm::vec3(0.0f, 1.0f, 1.0f));
-    ubo.view = mDebugCamera->getViewMatrix();//glm::lookAt(glm::vec3(5.0f, 5.0f, 5.0f),glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.model = glm::mat4(1.0f);
+    ubo.view = mDebugCamera->getViewMatrix();
     ubo.proj = glm::perspective(glm::radians(45.0f), (float)vk_core::instance().getSwapChain()->getSwapChainExtent().width / (float)vk_core::instance().getSwapChain()->getSwapChainExtent().height, 0.1f, 10.0f);
     ubo.proj[1][1] *= -1;
 
@@ -42,13 +43,14 @@ void Renderer::update() {
 void Renderer::drawFrame() {
     std::shared_ptr<vk_device> device = vk_core::instance().getDevice();
     std::shared_ptr<vk_swapChain> swapChain = vk_core::instance().getSwapChain();
-    uint32_t imageIndex;
 
-    VkResult result = vkAcquireNextImageKHR(device->getDevice(), swapChain->getSwapChain(), std::numeric_limits<uint64_t>::max(), mImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(device->getDevice(), swapChain->getSwapChain(), std::numeric_limits<uint64_t>::max(), mImageAvailableSemaphore, VK_NULL_HANDLE, &mFrameIndex);
 
     if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
     }
+
+    buildCommandBuffer();
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -60,7 +62,7 @@ void Renderer::drawFrame() {
     submitInfo.pWaitDstStageMask = waitStages;
 
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &mCommandBuffers[imageIndex];
+    submitInfo.pCommandBuffers = &mCommandBuffers[mFrameIndex];
 
     VkSemaphore signalSemaphores[] = { mRenderFinishedSemaphore };
     submitInfo.signalSemaphoreCount = 1;
@@ -80,7 +82,7 @@ void Renderer::drawFrame() {
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
 
-    presentInfo.pImageIndices = &imageIndex;
+    presentInfo.pImageIndices = &mFrameIndex;
 
     result = vkQueuePresentKHR(device->getPresentQueue(), &presentInfo);
 
@@ -100,7 +102,8 @@ void Renderer::resize(int w, int h) {
     vk_core::instance().getSwapChain()->reCreateSwapChain(extent);
     createDepthImage();
     createFramebuffers();
-    createCommandBuffers();
+    buildCommandBuffer();
+    //createCommandBuffers();
 }
 
 void Renderer::createSemaphores() {
@@ -333,26 +336,7 @@ void Renderer::createGraphicsPipeline() {
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
-/*
-    VkViewport viewport = {};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = (float)vk_core::instance().getSwapChain()->getSwapChainExtent().width;
-    viewport.height = (float)vk_core::instance().getSwapChain()->getSwapChainExtent().height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
 
-    VkRect2D scissor = {};
-    scissor.offset = { 0, 0 };
-    scissor.extent = vk_core::instance().getSwapChain()->getSwapChainExtent();
-
-    VkPipelineViewportStateCreateInfo viewportState = {};
-    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
-    viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
-    */
     VkPipelineViewportStateCreateInfo viewportState = {};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportState.pNext = NULL;
@@ -438,8 +422,6 @@ void Renderer::createGraphicsPipeline() {
 }
 
 void Renderer::createCommandBuffers() {
-    std::shared_ptr<Mesh> mesh = MeshManager::instance().getByHandle(0);
-
     mCommandBuffers.resize(mSwapChainFramebuffers.size());
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -450,62 +432,66 @@ void Renderer::createCommandBuffers() {
     if (vkAllocateCommandBuffers(vk_core::instance().getDevice()->getDevice(), &allocInfo, mCommandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
+}
 
-    for (size_t i = 0; i < mCommandBuffers.size(); i++) {
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+void Renderer::buildCommandBuffer() {
+    std::shared_ptr<StaticModel> sm = RenderScene::instance().getStaticModel(0);
+    std::shared_ptr<Mesh> mesh = sm->mMesh;//MeshManager::instance().getByHandle(0);
 
-        vkBeginCommandBuffer(mCommandBuffers[i], &beginInfo);
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-        VkRenderPassBeginInfo renderPassInfo = {};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = mRenderPass;
-        renderPassInfo.framebuffer = mSwapChainFramebuffers[i];
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = vk_core::instance().getSwapChain()->getSwapChainExtent();
+    vkBeginCommandBuffer(mCommandBuffers[mFrameIndex], &beginInfo);
 
-        std::array<VkClearValue, 2> clearValues = {};
-        clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-        clearValues[1].depthStencil = { 1.0f, 0 };
+    VkRenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = mRenderPass;
+    renderPassInfo.framebuffer = mSwapChainFramebuffers[mFrameIndex];
+    renderPassInfo.renderArea.offset = { 0, 0 };
+    renderPassInfo.renderArea.extent = vk_core::instance().getSwapChain()->getSwapChainExtent();
 
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
+    std::array<VkClearValue, 2> clearValues = {};
+    clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[1].depthStencil = { 1.0f, 0 };
 
-        vkCmdBeginRenderPass(mCommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
 
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)vk_core::instance().getSwapChain()->getSwapChainExtent().width;
-        viewport.height = (float)vk_core::instance().getSwapChain()->getSwapChainExtent().height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(mCommandBuffers[i], 0, 1, &viewport);
+    vkCmdBeginRenderPass(mCommandBuffers[mFrameIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        VkRect2D scissor = {};
-        scissor.offset = { 0, 0 };
-        scissor.extent = vk_core::instance().getSwapChain()->getSwapChainExtent();
-        vkCmdSetScissor(mCommandBuffers[i], 0, 1, &scissor);
+    VkViewport viewport = {};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)vk_core::instance().getSwapChain()->getSwapChainExtent().width;
+    viewport.height = (float)vk_core::instance().getSwapChain()->getSwapChainExtent().height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(mCommandBuffers[mFrameIndex], 0, 1, &viewport);
 
-        vkCmdBindPipeline(mCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
+    VkRect2D scissor = {};
+    scissor.offset = { 0, 0 };
+    scissor.extent = vk_core::instance().getSwapChain()->getSwapChainExtent();
+    vkCmdSetScissor(mCommandBuffers[mFrameIndex], 0, 1, &scissor);
 
-        VkBuffer vertexBuffers[] = { mesh->mVertexBuffer->getBuffer() };
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(mCommandBuffers[i], 0, 1, vertexBuffers, offsets);
+    vkCmdBindPipeline(mCommandBuffers[mFrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
 
-        vkCmdBindIndexBuffer(mCommandBuffers[i], mesh->mIndexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
+    VkBuffer vertexBuffers[] = { mesh->mVertexBuffer->getBuffer() };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(mCommandBuffers[mFrameIndex], 0, 1, vertexBuffers, offsets);
 
-        vkCmdBindDescriptorSets(mCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, 0, 1, &mDescriptorSet, 0, nullptr);
+    vkCmdBindIndexBuffer(mCommandBuffers[mFrameIndex], mesh->mIndexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-        vkCmdDrawIndexed(mCommandBuffers[i], static_cast<uint32_t>(mesh->indexData.size()), 1, 0, 0, 0);
+    vkCmdBindDescriptorSets(mCommandBuffers[mFrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, 0, 1, &mDescriptorSet, 0, nullptr);
 
-        vkCmdEndRenderPass(mCommandBuffers[i]);
+    vkCmdDrawIndexed(mCommandBuffers[mFrameIndex], static_cast<uint32_t>(mesh->indexData.size()), 1, 0, 0, 0);
 
-        if (vkEndCommandBuffer(mCommandBuffers[i]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to record command buffer!");
-        }
+    vkCmdEndRenderPass(mCommandBuffers[mFrameIndex]);
+
+    if (vkEndCommandBuffer(mCommandBuffers[mFrameIndex]) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer!");
     }
+
 }
 
 
