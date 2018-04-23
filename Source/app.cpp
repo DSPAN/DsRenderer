@@ -50,7 +50,7 @@ void App::init() {
     Importer::startUp();
     Input::startUp();
 
-    Importer::instance().loadMeshRes("E:/DsRenderer/DsRenderer/Data/Meshs/untitled.gltf");
+    Importer::instance().loadMeshRes("E:/DsRenderer/DsRenderer/Data/Meshs/s.gltf");
     std::shared_ptr<Mesh> mesh = MeshManager::instance().getByHandle(0);
     std::cout<<"name : "<<mesh->mName<<std::endl;
     std::cout<<"vectex count : "<<mesh->vertexData.size()<<std::endl;

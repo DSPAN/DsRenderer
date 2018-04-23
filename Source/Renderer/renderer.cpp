@@ -3,6 +3,8 @@
 #include "../ResourceManagers/meshmanager.h"
 #include "../Input/input.h"
 #include "renderscene.h"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 #include <chrono>
 
 void Renderer::init() {
@@ -29,9 +31,9 @@ void Renderer::update() {
     float time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.0f;
 
     UniformBufferObject ubo = {};
-    ubo.model = glm::mat4(1.0f);
+    ubo.model = glm::toMat4(glm::quat(0,0,-0.707f,0.707f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.01f,0.01f,0.01f));//glm::mat4(1.0f);
     ubo.view = mDebugCamera->getViewMatrix();
-    ubo.proj = glm::perspective(glm::radians(45.0f), (float)vk_core::instance().getSwapChain()->getSwapChainExtent().width / (float)vk_core::instance().getSwapChain()->getSwapChainExtent().height, 0.1f, 10.0f);
+    ubo.proj = glm::perspective(glm::radians(45.0f), (float)vk_core::instance().getSwapChain()->getSwapChainExtent().width / (float)vk_core::instance().getSwapChain()->getSwapChainExtent().height, 0.1f, 100.0f);
     ubo.proj[1][1] *= -1;
 
     void* data;
