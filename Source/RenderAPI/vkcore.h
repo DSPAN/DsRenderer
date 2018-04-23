@@ -12,6 +12,9 @@ public:
         mDevice = device;
         mSwapChain = swapChain;
         createCommandPool();
+        createDefaultDescriptorPool();
+        createDefaultMaterialLayout();
+        createDefaultGlobalLayout();
     }
 
     std::shared_ptr<vk_device> getDevice(){return mDevice;}
@@ -26,12 +29,28 @@ public:
 
     void endSingleTimeCommands(const VkCommandBuffer &commandBuffer);
 
+    VkDescriptorPool getDefaultDescriptorPool(){return mDefaultDescPool;}
+
+    VkDescriptorSetLayout getDefaultMaterialLayout(){return mDefaultMaterialLayout;}
+
+    VkDescriptorSetLayout getDefaultGlobalLayout(){return mDefaultGlovalLayout;}
+
 private:
     void createCommandPool();
+
+    void createDefaultDescriptorPool();
+
+    void createDefaultMaterialLayout();
+
+    void createDefaultGlobalLayout();
+
 private:
     std::shared_ptr<vk_device> mDevice;
     std::shared_ptr<vk_swapChain> mSwapChain;
     VkCommandPool mCommandPool;
+    VkDescriptorPool mDefaultDescPool;
+    VkDescriptorSetLayout mDefaultMaterialLayout;
+    VkDescriptorSetLayout mDefaultGlovalLayout;
 
 };
 

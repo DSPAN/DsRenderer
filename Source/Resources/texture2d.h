@@ -4,7 +4,7 @@
 #include "../RenderAPI/vkimage.h"
 #include <memory>
 
-class Texture2D{
+class Texture2D {
 public:
     Texture2D() {
 
