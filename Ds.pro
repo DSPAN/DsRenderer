@@ -42,7 +42,8 @@ HEADERS += \
     Source/Renderer/staticmodel.h \
     Source/Components/staticmodelcomponent.h \
     Source/Resources/texture2d.h \
-    Source/Resources/material.h
+    Source/Resources/material.h \
+    Source/ResourceManagers/texturemanager.h
 
 SOURCES += Examples/main.cpp \
     Source/RenderAPI/util.cpp \
